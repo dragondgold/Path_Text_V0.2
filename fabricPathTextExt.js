@@ -113,7 +113,7 @@ fabric.util.object.extend(fabric.Point.prototype, {
      * This flag is used in debugging mode this flag will add border on all characters
      * @type Number
      */
-	debug: false,
+	debug: true,
 
     /**
      * fabric.Path String on which text will be drawn
@@ -157,7 +157,7 @@ fabric.util.object.extend(fabric.Point.prototype, {
         scaleY: 1,
         angle: 0,
         hasControls: true,
-        hasRotatingPoint: false,
+        hasRotatingPoint: true,
         lockMovementX: false,
         lockMovementY: false,
         lockRotation: false,
@@ -176,11 +176,10 @@ fabric.util.object.extend(fabric.Point.prototype, {
     },
 	
 	initialize: function (objects, options) {
-            options || (options = {});
-			options = this._createPathObject(options);
-            this.callSuper('initialize', objects, options);
-			this.on('added', this._addPathObject);
-
+        options || (options = {});
+		options = this._createPathObject(options);
+        this.callSuper('initialize', objects, options);
+		this.on('added', this._addPathObject);
     },
 	
 	/*
@@ -229,24 +228,23 @@ fabric.util.object.extend(fabric.Point.prototype, {
         _this._observePathObject(_this);
         this.textPath.on('modified', function(e){ _this._observePathObject(_this) });
     },
-
 	
 	_observePathObject: function(_this){
-           var widget = _this.textPath;
-		   var obj = _this;
-            var fontSize = null;
-            if(widget.scaleX == widget.scaleY){
-                fontSize = obj.originalFontSize / (widget.scaleX);
-            }
-			var updatedProperty = {
-                top: widget.top,
-                left: widget.left,
-                scaleX: widget.scaleX,
-                scaleY: widget.scaleY,
-                fontSize: fontSize,
-                angle: widget.angle
-            };		
-			this._updatePropertyOfWidget(obj, updatedProperty); 
+       var widget = _this.textPath;
+	   var obj = _this;
+        var fontSize = null;
+        if(widget.scaleX == widget.scaleY){
+            fontSize = obj.originalFontSize / (widget.scaleX);
+        }
+		var updatedProperty = {
+            top: widget.top,
+            left: widget.left,
+            scaleX: widget.scaleX,
+            scaleY: widget.scaleY,
+            fontSize: fontSize,
+            angle: widget.angle
+        };		
+		this._updatePropertyOfWidget(obj, updatedProperty); 
 	},
 	
 
@@ -286,7 +284,7 @@ fabric.util.object.extend(fabric.Point.prototype, {
 		else{
 		 	this.callSuper('_set', prop, value);
 		}
-		 return this;
+		return this;
     },
 	
 	 /**
@@ -318,7 +316,7 @@ fabric.util.object.extend(fabric.Point.prototype, {
       if (this._boundaries == null || this.isFrozen == null || this.isFrozen === false) {
         this._boundaries = [];
       }
-      this._renderTextLines("fillText", ctx, textLines);
+      this._renderTextLines("fillText", ctx, this._getTextLines());
     },
 
 
@@ -337,10 +335,10 @@ fabric.util.object.extend(fabric.Point.prototype, {
         // If fabric.Text-like object supports the ability to get the width of a line, use that instead of the ctx[method] fabric.Text#_getLineWidth defers to.
         var supportsWidthOfLine = (this._getWidthOfLine == null) ? false : true;
         for (var lineIndex = 0, len = textLines.length; lineIndex < len; lineIndex++) {
-          var lineWidth = (supportsWidthOfLine) ? this._getWidthOfLine(ctx, lineIndex, textLines) : this._getLineWidth(ctx, textLines[lineIndex]);
-          var lineLeftOffset = this._getLineLeftOffset(lineWidth);
+          var lineWidth = (supportsWidthOfLine) ? this._getWidthOfLine(ctx, lineIndex, textLines) : this.getLineWidth(lineIndex);
+          var lineLeftOffset = this._getLineLeftOffset(lineIndex);
           this._boundaries.push({
-            height: this._getHeightOfLine(ctx, lineIndex, textLines),
+            height: this.getHeightOfLine(lineIndex),
             width: lineWidth,
             left: lineLeftOffset
           });
@@ -538,7 +536,7 @@ fabric.util.object.extend(fabric.Point.prototype, {
     _getObservedTotalLineHeight: function(ctx) {
 		//console.log('_getObservedTotalLineHeight',11);
       var textLines = this._getTextLines();
-      return this._getTextHeight(ctx, textLines);
+      return this.getHeightOfLine(0);
     },
 
     /**
@@ -599,7 +597,7 @@ fabric.util.object.extend(fabric.Point.prototype, {
               lineLeftOffset = _this._getLineLeftOffset(lineWidth);
             ctx.fillRect(
               _this._getLeftOffset() + lineLeftOffset,
-              ~~((offset + (i * _this._getHeightOfLine(ctx, i, textLines))) - halfOfVerticalBox),
+              ~~((offset + (i * _this.getHeightOfLine(i))) - halfOfVerticalBox),
               lineWidth,
               1);
           }
@@ -699,7 +697,7 @@ fabric.util.object.extend(fabric.Point.prototype, {
       var lineHeights = [];
       while (copyOfOrder.length > 0) {
         var currentIndex = copyOfOrder.shift();
-        var lineHeight = this._getHeightOfLine(ctx, currentIndex, textLines);
+        var lineHeight = this.getHeightOfLine(currentIndex);
         lineHeights[currentIndex] = lineHeight;
       }
       // Render the lines in order of width.
@@ -1232,7 +1230,7 @@ fabric.util.object.extend(fabric.Point.prototype, {
         startingDistance = 0;
       }
       // Obtain single line height.
-      var heightOfLetter = this._getHeightOfLine(ctx, lineIndex, this._getTextLines());
+      var heightOfLetter = this.getHeightOfLine(lineIndex);
       var halfHeightOfLetter = heightOfLetter / 2;
       // Obtain the height of the untransformed bounding box that the unpathed text would have created.
       var nonTransformedHeightOfAllLines = this._getObservedTotalLineHeight(ctx);
