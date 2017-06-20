@@ -113,7 +113,7 @@ fabric.util.object.extend(fabric.Point.prototype, {
      * This flag is used in debugging mode this flag will add border on all characters
      * @type Number
      */
-	debug: true,
+	debug: false,
 
     /**
      * fabric.Path String on which text will be drawn
@@ -128,7 +128,7 @@ fabric.util.object.extend(fabric.Point.prototype, {
      */
     isOutOfPath: false,
 	
-	lineHeight:1,
+	lineHeight: 1,
 
 	originX: 'center',
 
@@ -147,6 +147,8 @@ fabric.util.object.extend(fabric.Point.prototype, {
 	stroke: null,
 
     id: 'pathText_1',
+
+    objectCaching: false,   // Disable object caching otherwise the text is clipped inside the fabric.Text bounding box
 
     allowPathProp: {
         top: 1,
@@ -195,7 +197,6 @@ fabric.util.object.extend(fabric.Point.prototype, {
         /*Making Text Objected non selected so that custom path should have control*/
         options.selectable = false;
         return options;
-		 
 	},
 
     /*
@@ -226,7 +227,7 @@ fabric.util.object.extend(fabric.Point.prototype, {
 		var _this = this;
 		this.canvas.add(this.textPath).renderAll();
         _this._observePathObject(_this);
-        this.textPath.on('modified', function(e){ _this._observePathObject(_this) });
+        this.textPath.on('modified', function(e){ _this._observePathObject(_this); });
     },
 	
 	_observePathObject: function(_this){
@@ -270,10 +271,9 @@ fabric.util.object.extend(fabric.Point.prototype, {
 			this.canvas.renderAll();
 			var _this = this;
 			this.textPath.on('modified', function(e){ _this._observePathObject(_this) });
-			//Hack because does not found best solution for get key
+			// Hack because does not found best solution for get key
 			prop = 'textPath';
 			value = this.textPath;
-			
 		}
         else if(this.textPath && typeof this.allowPathProp[prop] !== "undefined"){
             this.textPath.set(prop, value);
