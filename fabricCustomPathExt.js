@@ -43,6 +43,8 @@
         id: 'customPath_1',
 
         linkId: 'customPath_1',
+
+        objectCaching: false,
 		
 		 /**
          * Gets a fabric.Point at a parametric distance along the current fabric.Path
