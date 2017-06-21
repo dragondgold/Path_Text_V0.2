@@ -44,7 +44,7 @@ fabric.util.object.extend(fabric.Point.prototype, {
   	
 	
 	// Extend fabric.Text to include the necessary methods to render the text along a line (as opposed to, say, physically positioning some group of letters).
-    fabric.PathText = fabric.util.createClass(fabric.Text, {
+    fabric.PathText = fabric.util.createClass(fabric.IText, {
 	
 	/*
 	* fabric.Path define type of object
@@ -215,6 +215,14 @@ fabric.util.object.extend(fabric.Point.prototype, {
         return this;
     },
 
+    getWidth: function () {
+        return this.textPath.getWidth() + this.textPath.padding*2;
+    },
+
+    getHeight: function () {
+        return this.textPath.getHeight() + this.textPath.padding*2;
+    },
+
     mapPathProperties: function(options){
         var filterOptions = {};
         for(var propName in this.allowPathProp){
@@ -248,15 +256,27 @@ fabric.util.object.extend(fabric.Point.prototype, {
 		this._updatePropertyOfWidget(obj, updatedProperty); 
 	},
 	
-
-	 _updatePropertyOfWidget : function(widget, property){
+	_updatePropertyOfWidget : function(widget, property){
 		widget.set(property);
      	this.canvas.renderAll();
 	},
 
-	
 	_set: function(prop, value) {
-		if(prop == 'pathString' && typeof value != 'object' && this.canvas){
+        // Dirty workaround for text alignment on new fabric.js version (1.7+)
+        // The only way to make the 'center' text alignment to work is to set the
+        //  originX to left. The alignment is not exactly perfect but is almost there.
+        // Right text alignment still doesn't work.
+        if(prop == 'textAlign') {
+            if(value == 'center') {
+                this.callSuper('_set', 'originX', 'left');
+                this.callSuper('_set', 'originY', 'center');
+            }
+            else {
+                this.callSuper('_set', 'originX', 'center');
+                this.callSuper('_set', 'originY', 'center');
+            }
+        }
+        if(prop == 'pathString' && typeof value != 'object' && this.canvas){
 			var options = {};
             var pathOptions = this.mapPathProperties(this.textPath);
 			options.textPath = new fabric.CustomPath(value, pathOptions);
@@ -284,6 +304,12 @@ fabric.util.object.extend(fabric.Point.prototype, {
 		else{
 		 	this.callSuper('_set', prop, value);
 		}
+
+        // Add padding to the CustomPath object half the height of the line to make the bounding box
+        //  bigger
+        if(this.textPath && this.canvas) {
+            this.textPath.set('padding', this._getObservedTotalLineHeight(this)/2 + 1);
+        }
 		return this;
     },
 	
@@ -309,7 +335,7 @@ fabric.util.object.extend(fabric.Point.prototype, {
      * @param {Array} textLines Array of all text lines
      */
     _renderTextFill: function(ctx, textLines) {
-		//console.log('_renderTextFill',5);
+	  //console.log('_renderTextFill',5);
       if (!this.fill && !this._skipFillStrokeCheck) {
         return;
       }
